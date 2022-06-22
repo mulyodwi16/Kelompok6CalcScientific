@@ -1,0 +1,240 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <math.h>
+
+void getInput(char *in)
+{
+    printf("\nMasukkan Penjumlahan : ");
+    fgets(in, 256, stdin);
+}
+
+int bracketpairkiri(char p)
+{
+    if (p == '(')
+        return 1;
+    else
+        return 0;
+}
+
+int bracketpairkanan(char p)
+{
+    if (p == ')')
+        return 1;
+    else
+        return 0;
+}
+
+int cek_operator(char p)
+{
+    if (p == '+' || p == '-' || p == '*' || p == '/' || p == '$' || p == '%')
+        return p;
+    else
+        return 0;
+}
+
+int performOperator(int a, int b, char p)
+{
+    switch (p)
+    {
+    case '+':
+        return a + b;
+    case '-':
+        return a - b;
+    case '*':
+        return a * b;
+    case '$':
+        return sqrt(double(b));
+    case '%':
+        return fmod(a, b);
+    case '/':
+        if (b == 0)
+        {
+            printf("Tidak dapat dibagi dengan 0\n");
+            exit(1);
+        }
+        return a / b;
+    default:
+        puts("\n");
+        break;
+    }
+    return 0;
+}
+
+char cek_digit(char p)
+{
+    if (p >= '0' && p <= '9')
+        return 1;
+    else
+        return 0;
+}
+
+int charToDigit(char p)
+{
+    if (p >= '0' && p <= '9')
+        return p - '0';
+    else
+        return 0;
+}
+
+int isNumber(char *p)
+{
+    while (*p)
+    {
+        if (!cek_digit(*p))
+            return 0;
+        p++;
+    }
+    return 1;
+}
+
+int len(char *p)
+{
+    return (int)strlen(p);
+}
+
+int numOfOperands(char *p)
+{
+    int total = 0;
+    while (*p)
+    {
+        if (cek_operator(*p))
+            total++;
+        p++;
+    }
+    return total + 1;
+}
+
+int isMDGRoup(char *p)
+{
+
+    for (; *p; p++)
+    {
+        if (!cek_digit(*p) && *p != '/' && *p != '*')
+            return 0;
+    }
+    return 1;
+}
+int getLeftOperand(char *p, char *l)
+{
+
+    int i = 0;
+
+    if (isMDGRoup(p))
+    {
+        while (1)
+        {
+            if (*p == '*' || *p == '/')
+                break;
+            l[i++] = *p++;
+        }
+        return i;
+    }
+
+    if (bracketpairkiri(*p))
+    {
+        int bpkiri = 1;
+        int bpkanan = 0;
+        p++;
+        while (1)
+        {
+            if (bracketpairkiri(*p))
+                bpkiri++;
+            if (bracketpairkanan(*p))
+                bpkanan++;
+
+            if (bracketpairkanan(*p) && bpkiri == bpkanan)
+                break;
+            l[i++] = *p++;
+        }
+
+        l[i] = '\0';
+        return i + 2;
+    }
+
+    while (1)
+    {
+        if (!cek_digit(*p))
+            break;
+        l[i++] = *p++;
+    }
+    l[i] = '\0';
+    return i;
+}
+
+int getOperator(char *p, int index, char *op)
+{
+    *op = p[index];
+    return index + 1;
+}
+
+int getRightOperand(char *p, char *l)
+{
+    while (*p && (cek_digit(*p) || cek_operator(*p) ||
+                  bracketpairkiri(*p) || bracketpairkanan(*p)))
+    {
+        *l++ = *p++;
+    }
+    *l = '\0';
+
+    return 0;
+}
+
+int cek_kosong(char *p)
+{
+
+    if (len(p) == 0)
+        return 1;
+    else
+        return 0;
+}
+
+int fungsi_kalkulator(char *p)
+{
+
+    if (isNumber(p))
+        return atoi(p);
+
+    char leftOperand[256] = "";
+    char rightOperand[256] = "";
+    char op;
+
+    int leftOpIndex = getLeftOperand(p, leftOperand);
+    int operatorIndex = getOperator(p, leftOpIndex, &op);
+    int rightOpIndex = getRightOperand(p + operatorIndex, rightOperand);
+
+    printf("%s, %c, %s", leftOperand, op, rightOperand);
+    getchar();
+
+    if (cek_kosong(rightOperand))
+        return fungsi_kalkulator(leftOperand);
+
+    return performOperator(
+        fungsi_kalkulator(leftOperand),fungsi_kalkulator(rightOperand),op);
+}
+
+int main()
+{
+    char in[256];
+    printf("============================= ");
+    printf("Calculator Multi Operators Kelompok 6");
+    printf(" =============================");
+    printf("\n\n + (Penjumlahan)");
+    printf("\t - (Pengurangan)");
+    printf("\t * (Perkalian)");
+    printf("\t        / (Pembagian)");
+    printf("\t        ^ (pangkat)");
+    printf("\t %% (Modulus)");
+    printf("\n $ (Akar Pangkat)");
+
+    printf("\n\nContoh Format : 3*2/2\n");
+    while (1)
+    {
+        getInput(in);
+        if (strncmp(in, "quit", 4) == 0)
+            break;
+
+        int result = fungsi_kalkulator(in);
+        printf("%d\n", result);
+    }
+}
